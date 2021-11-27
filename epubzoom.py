@@ -22,10 +22,8 @@ import zipfile						# (un)compress epub
 import xml.etree.ElementTree as ET	# parse xml
 import argparse 					# argument parser
 import imagesize 					# for getting image dimensions
-import cssutils						# reading the css
-import logging						# suppress messages from cssutils
 
-apversion='''epubzoom v0.1'''
+apversion='''epubzoom v0.2'''
 apdescription='''epubzoom is a utility for correcting image sizes in epub files'''
 apepilog='''epubzoom Copyright (C) 2020 Joseph Heller
 This program comes with ABSOLUTELY NO WARRANTY; for details type use '-w'.
@@ -76,11 +74,12 @@ printable=" !#$%&()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefg
 emsize=16							# html spec em size in pixels
 screenwidth=600						# assumed standard screenwidth for epub
 screenheight=800					# assumed standard screenheight for epub
+emtreshold=2						# image size treshold em vs non-em images
 nonemzoom=1.3						# zoomfactor for non-em images
 emzoom=0.6							# zoomfactor for em images
 hpmaxdef=0.9						# height protect margin
 hpmax=hpmaxdef						# set in getpages(), used in setimagedims()
-dirlist=[]
+dirlist=[]							# directories that are branched into
 
 def makeprintable(string):
 	pstring=""
@@ -127,7 +126,7 @@ def readarguments():
 
 def isfontsize(w,h):
 	# For formulae and similar, the image should scale relative to the font size. Therefore we guess if this should be done based on the image size. Standard em size is 16px high
-	if h<2*emsize:
+	if h<emtreshold*emsize:
 		return True
 	else:
 		return False
@@ -157,25 +156,6 @@ def getimagedims(infile):
 	w,h=imagesize.get(infile)
 	return w,h
 
-def getcssdims(infiles,class_name):
-	# ToDo: more of a gimmick, we don't actually do anything with these dims
-	w='0'
-	h='0'
-	cssutils.log.setLevel(logging.FATAL)
-	for cssfile in infiles:
-		sheet=cssutils.parseFile(cssfile)
-		for rule in sheet:
-			if rule.selectorText=='.'+class_name or rule.selectorText=='img.'+class_name:
-				for property in rule.style:
-					if property.name=='width':
-						w=property.value
-					elif property.name=='height':
-						h=property.value
-	w=w.replace('px','')
-	h=h.replace('px','')
-	print('(css: '+str(w)+'x'+str(h), end=') ')
-	return w,h
-
 def readhtml(infile):
 	# Converts the <img> dimenensions, based on the src dimensions. Notes: images contained in an <svg> are not changed, which is usually the case for cover pages. The stylesheet dimensioning is replaced by inline css image dimensions. Only changed xhtml's are overwritten.
 	ns={'xhtml':'http://www.w3.org/1999/xhtml'}
@@ -184,28 +164,18 @@ def readhtml(infile):
 	hreflist=[]
 	changedir(infile)
 	changed=False
-	# ToDO: css not used
-	#for stylesheet in root.findall(".//xhtml:link[@type='text/css']",ns):
-	#	href=stylesheet.get('href')
-	#	hreflist.append(href)
-	#	print('  stylesheet: '+href)
 	for img in root.findall(".//xhtml:img",ns):
 		#print(img.attrib)
 		src=img.get('src')
 		print('  image ref: '+src, end=' ')
 		w,h=getimagedims(src)
 		print('('+str(w)+'x'+str(h)+'px)', end=' ')
-		# ToDo: the css check is not used, and may break execution
-		#cssclass=img.get('class')
-		#if (cssclass is not None):
-		#	getcssdims(iter(hreflist),cssclass)
 		nw,nh=setimagedims(w,h)
 		print('--> ('+nw+'x'+nh+')')
 		img.set('alt','epubzoom')
 		img.set('class','')
 		img.set('style','max-width:100%;width:'+nw+';height:'+nh)
 		changed=True
-	#tree.write(infile,encoding='UTF-8',xml_declaration=True, default_namespace=None, method='html')'''
 	returndir()
 	if changed:
 		tree.write(infile,encoding='UTF-8',xml_declaration=True, default_namespace=None, method='xml')
