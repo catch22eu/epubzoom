@@ -1,12 +1,12 @@
 # epubzoom
 epubzoom is a utility for correcting image sizes in epub files.
 
-The tool parses an epub file and is able find references to images, their original dimensions, and has a default (and customizable) set of parameters that are used to alter the display size of these images. 
+The tool parses an epub file and is able find references to images, their original dimensions, and has a default (and customizable) set of parameters that are used to alter the display size of these images. This utility is especially designed to correct for images which are displayed too small on HD ereaders. This issue is can be caused during conversion of the original document to the epub format, where a small size epub reader is assumed to display these images. In the worst-case scenario, the image resolution is not set relative to the ereader page size as a percentage, but set as an absolute pixel size. This causes especially too small images on ereaders with a higher display resolution. The epubzoom utility corrects the image display size problem and makes the epub compatible with all available ereader display sizes. 
 
-The tool is currently in development, which should be able to alter the majority of epub files and the images contained within them. There are multiple methods to reference images in the epub standard, as well as multiple document structures that can be used. Currently implemented are xhtml 'img' references. The size of the referenced images are determined, and based on a set of parameters style dimensions are determined that are relative to the display size (e.g. the ereader), or character size. A distinction is therefore made between small images that are relative to the character size of the text, which are for instance scanned formulae, and larger images. The input parameters are:
-- the book's original display size in pixels
-- the threshold when to regard an image size to be regarded relative to text size or page size
-- zoomfactors for both image types (relative to text or page)
+The tool is currently in development, which should be able to alter the majority of epub files and the images contained within them. There are multiple methods to reference images in the epub standard, as well as multiple document structures that can be used. Currently implemented are xhtml 'img' references. The size of the referenced images are determined, and based on a set of parameters style dimensions are chosen that are relative to the display size (e.g. the ereader), or character size. A distinction is therefore made between small images that are relative to the character size of the text, which are for instance scanned formulae, and larger images. The input parameters are:
+- the estimated book's original display size in pixels
+- the threshold when to regard an image size to relative to text size or page size
+- zoomfactors for both image types
 
 ### Prerequisites
 
@@ -46,14 +46,16 @@ epubzom.py inputfile.epub
 
 ## Version History
 
+#### v0.3: 31 December 2021
+##### New:
+- Added option to only compress the uncompressed directory
+
 #### v0.2: 27 November 2021
 ##### New:
 - Removed the css parser, as it was not used
 
-
 #### v0.1 25 November 2021
 First version
-
 
 ## License
 

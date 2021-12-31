@@ -23,7 +23,7 @@ import xml.etree.ElementTree as ET	# parse xml
 import argparse 					# argument parser
 import imagesize 					# for getting image dimensions
 
-apversion='''epubzoom v0.2'''
+apversion='''epubzoom v0.3'''
 apdescription='''epubzoom is a utility for correcting image sizes in epub files'''
 apepilog='''epubzoom Copyright (C) 2020 Joseph Heller
 This program comes with ABSOLUTELY NO WARRANTY; for details type use '-w'.
@@ -115,12 +115,13 @@ def readarguments():
 	parser = argparse.ArgumentParser(description=apdescription,epilog=apepilog,formatter_class=argparse.RawDescriptionHelpFormatter)
 	parser.add_argument('filename', type=str, help="epub file to be corrected")
 	parser.add_argument('-d', type=int, default=1, help="detail level D of output: 0 minimal, 1 default, 2 detail, 3 debug")
+	parser.add_argument('-s', '--save', action='store_false', help="Save uncompressed epub")
 	parser.add_argument('-v', action='version', help='show version', version=apversion)
 	parser.add_argument('-w', action='version', help='show warranty', version=apwarranty)
 	parser.add_argument('-c', action='version', help='show copyright', version=apcopyright)
 	args = parser.parse_args()
 	if os.path.isfile(args.filename):
-		return args.filename, args.d
+		return args.filename, args.d, args.save
 	else:
 		halt("File not found")
 
@@ -239,14 +240,15 @@ ET.register_namespace('opf', 'http://www.idpf.org/2007/opf')
 ET.register_namespace('epub', 'http://www.idpf.org/2007/ops')
 ET.register_namespace('xlink','http://www.w3.org/1999/xlink')
 ET.register_namespace('svg','http://www.w3.org/2000/svg')
-infile, verbosity = readarguments()
-vprint("extracting: "+infile,0)
+infile, verbosity, doload = readarguments()
 epubdir=infile[:-5]
-with zipfile.ZipFile(infile, 'r') as file:
-	file.extractall(epubdir)
-	changedir(epubdir)	
-	getpages(getopf())
-	returndir()
+if doload:
+	vprint("extracting: "+infile,0)
+	with zipfile.ZipFile(infile, 'r') as file:
+		file.extractall(epubdir)
+		changedir(epubdir)	
+		getpages(getopf())
+		returndir()
 zipdir(epubdir)
 
 
